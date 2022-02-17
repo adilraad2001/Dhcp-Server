@@ -67,10 +67,14 @@ In order to create a NAT Network, we should use the **VBoxManage**, which is a c
 vboxmanage natnetwork add --netname natnet1 --network "192.168.1.0/24" --enable 
 
 To show all existed DHCP Servers, we use the command below:  
+```bat
 
 vboxmanage natnetwork list
 
+```
 In the figure below, all **natnet1** information: 
+
+```bat
 
 NetworkName:    natnet1
 Dhcpd IP:       192.168.1.3
@@ -81,11 +85,13 @@ Enabled:        Yes
 
 Global Configuration:
 
-`    `minLeaseTime:     default
+    minLeaseTime:     default
 
-`    `defaultLeaseTime: default
+    defaultLeaseTime: default
 
-`    `maxLeaseTime:     default
+    maxLeaseTime:     default
+    
+ ```
 
 **Set up DHCP Server:**  
 
@@ -97,28 +103,34 @@ Before installation part, the DHCP Server and the client should be connected to 
 
 At the terminal prompt, enter the following command to install DHCP: 
 
+```bat
+
 sudo apt install isc-dhcp-server 
+
+```
 
 **Configure the DHCP Server:**  
 
 To configure DHCP, one recommended way is to back up the original configuration file **/etc/dhcp/dhcpd.conf**. In case if something goes wrong, the original configuration can easily be restored. You can use the **cp** command or **mv** command to create a backup using the **{}** expansion feature of bash. 
 
+```bat
+
 sudo mv /etc/dhcp/dhcpd.conf{,.backup}
+
+```
 
 Now, we need to create a new **dhcp.conf** file and edit the configuration as follows: 
 
-\# minimal sample /etc/dhcp/dhcpd.conf 
+```bat
 
-
+# minimal sample /etc/dhcp/dhcpd.conf 
 default-lease-time 600; max-lease-time 7200; 
-
 authoritative;
-
 subnet 192.168.1.0 netmask 255.255.255.0 {  range 192.168.1.5 192.168.1.254;
-
-` `option routers 192.168.1.4;
-
+  option routers 192.168.1.4;
 } 
+
+```
 
 According to this configuration, the DHCP will be able to give an IP address from the range **192.168.1.150-192.168.1.200** with **600** seconds (10min) as a default lease time and **7200** seconds (2h) as a maximum one. 
 
@@ -130,15 +142,23 @@ The DHCP Server can have many interfaces, so we need to define which interface s
 
 The interface to bind is defined in **/etc/default/isc-dhcp-server**, in our case we simply edit as follows: 
 
+```bat
+
 INTERFACESv4="enp0s3" 
+
+```
 
 **Restart and check the DHCP Server status:** 
 
 After the configuration, we need to restart our server and check its status (if is active or not), using the **systemctl** command: 
 
+```bat
+
 sudo systemctl restart isc-dhcp-server.service
 
 sudo systemctl status isc-dhcp-server.service 
+
+```
 
 An active status is shown without any configuration error, indicates that the DHCP Server has successfully picked up the configuration and is ready to hand out IP Addresses. 
 
@@ -152,7 +172,11 @@ In order to verify our configuration, we will add, as we have indicated before, 
 
 The following command shows that ArchBang has received **192.168.1.6** as an IP address, and it’s added to the DHCP lease list. 
 
+```bat
+
 dhcp-lease-list --lease /var/lib/dhcp/dhcpd.leases
+
+```
 
 ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.013.png)
 
@@ -160,7 +184,11 @@ dhcp-lease-list --lease /var/lib/dhcp/dhcpd.leases
 
 In the case where the DHCP status looks failed, it’s recommended to visit **/var/log/syslog** file where DHCP diagnostics messages are located. 
 
+```bat
+
 sudo gedit /var/log/syslog
+
+```
 
 **What is a Relay Agent?** 
 
@@ -178,30 +206,45 @@ One important thing is that we should configure two network adapters (or two int
 
 To install the Relay Agent, we can use the following command: 
 
-sudo apt install isc-dhcp-relay ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.016.png)
+```bat
+
+sudo apt install isc-dhcp-relay 
+
+```
 
 While the installation process is running a popup window will be shown for indicating the DHCP Server IP and the interface where the Relay will receive the IP requests to forward to the DHCP. 
 
 Now Copy the needed service from **/lib/systemd/system** to **/etc/systemd/system/:** 
 
+```bat
+
 sudo cp /lib/systemd/system/isc-dhcp-relay.service /etc/systemd/system/
 
+```
 
 Another step is to add the configuration of the second network to the **dhcpd.conf** file: 
 
+```bat
+
 subnet 172.168.1.0 netmask 255.255.255.0 {  range 172.168.1.5 172.168.1.254;
 
-` `option routers 172.168.1.4; 
+  option routers 172.168.1.4; 
 
 } 
+
+```
 
 **Restart and check the Relay status:** 
 
 Now that changes to the configuration are made, we need to restart the service to enable those changes. To do that we will use the **systemctl** command: 
 
+```bat
+
 sudo systemctl restart isc-dhcp-relay 
 
 sudo systemctl status isc-dhcp-relay 
+
+```
 
 The result shows that there is no problem with this configuration: 
 
