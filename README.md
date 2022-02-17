@@ -64,15 +64,20 @@ This mode is similar to the NAT* mode* functionality, but it provides a network 
 
 In order to create a NAT Network, we should use the **VBoxManage**, which is a command line management tool of VirtualBox for configuring all VirtualBox settings, including VirtualBox network settings, then run the following command on the host terminal: 
 
-vboxmanage natnetwork add --netname natnet1 --network "192.168.1.0/24" --enable ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.003.png)
+vboxmanage natnetwork add --netname natnet1 --network "192.168.1.0/24" --enable 
 
 To show all existed DHCP Servers, we use the command below:  
 
-vboxmanage natnetwork list![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.004.png)
+vboxmanage natnetwork list
 
 In the figure below, all **natnet1** information: 
 
-NetworkName:    natnet1 Dhcpd IP:       192.168.1.3 LowerIPAddress: 192.168.1.4 UpperIPAddress: 192.168.1.254 NetworkMask:    255.255.255.0 Enabled:        Yes![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.005.png)
+NetworkName:    natnet1
+Dhcpd IP:       192.168.1.3
+LowerIPAddress: 192.168.1.4 
+UpperIPAddress: 192.168.1.254 
+NetworkMask:    255.255.255.0 
+Enabled:        Yes
 
 Global Configuration:
 
@@ -92,17 +97,20 @@ Before installation part, the DHCP Server and the client should be connected to 
 
 At the terminal prompt, enter the following command to install DHCP: 
 
-sudo apt install isc-dhcp-server ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.007.png)
+sudo apt install isc-dhcp-server 
 
 **Configure the DHCP Server:**  
 
 To configure DHCP, one recommended way is to back up the original configuration file **/etc/dhcp/dhcpd.conf**. In case if something goes wrong, the original configuration can easily be restored. You can use the **cp** command or **mv** command to create a backup using the **{}** expansion feature of bash. 
 
-sudo mv /etc/dhcp/dhcpd.conf{,.backup}![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.008.png)
+sudo mv /etc/dhcp/dhcpd.conf{,.backup}
 
 Now, we need to create a new **dhcp.conf** file and edit the configuration as follows: 
 
-\# minimal sample /etc/dhcp/dhcpd.conf ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.009.png)default-lease-time 600; max-lease-time 7200; 
+\# minimal sample /etc/dhcp/dhcpd.conf 
+
+
+default-lease-time 600; max-lease-time 7200; 
 
 authoritative;
 
@@ -122,13 +130,15 @@ The DHCP Server can have many interfaces, so we need to define which interface s
 
 The interface to bind is defined in **/etc/default/isc-dhcp-server**, in our case we simply edit as follows: 
 
-INTERFACESv4="enp0s3" ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.007.png)
+INTERFACESv4="enp0s3" 
 
 **Restart and check the DHCP Server status:** 
 
 After the configuration, we need to restart our server and check its status (if is active or not), using the **systemctl** command: 
 
-sudo systemctl restart isc-dhcp-server.service ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.010.png)sudo systemctl status isc-dhcp-server.service 
+sudo systemctl restart isc-dhcp-server.service
+
+sudo systemctl status isc-dhcp-server.service 
 
 An active status is shown without any configuration error, indicates that the DHCP Server has successfully picked up the configuration and is ready to hand out IP Addresses. 
 
@@ -142,7 +152,7 @@ In order to verify our configuration, we will add, as we have indicated before, 
 
 The following command shows that ArchBang has received **192.168.1.6** as an IP address, and it’s added to the DHCP lease list. 
 
-dhcp-lease-list --lease /var/lib/dhcp/dhcpd.leases![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.004.png)
+dhcp-lease-list --lease /var/lib/dhcp/dhcpd.leases
 
 ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.013.png)
 
@@ -150,7 +160,7 @@ dhcp-lease-list --lease /var/lib/dhcp/dhcpd.leases![](Aspose.Words.6fed6b4e-3816
 
 In the case where the DHCP status looks failed, it’s recommended to visit **/var/log/syslog** file where DHCP diagnostics messages are located. 
 
-sudo gedit /var/log/syslog![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.014.png)
+sudo gedit /var/log/syslog
 
 **What is a Relay Agent?** 
 
@@ -174,11 +184,12 @@ While the installation process is running a popup window will be shown for indic
 
 Now Copy the needed service from **/lib/systemd/system** to **/etc/systemd/system/:** 
 
-sudo cp /lib/systemd/system/isc-dhcp-relay.service /etc/systemd/system/![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.017.png)
+sudo cp /lib/systemd/system/isc-dhcp-relay.service /etc/systemd/system/
+
 
 Another step is to add the configuration of the second network to the **dhcpd.conf** file: 
 
-subnet 172.168.1.0 netmask 255.255.255.0 {  range 172.168.1.5 172.168.1.254; ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.018.png)
+subnet 172.168.1.0 netmask 255.255.255.0 {  range 172.168.1.5 172.168.1.254;
 
 ` `option routers 172.168.1.4; 
 
@@ -188,7 +199,9 @@ subnet 172.168.1.0 netmask 255.255.255.0 {  range 172.168.1.5 172.168.1.254; ![]
 
 Now that changes to the configuration are made, we need to restart the service to enable those changes. To do that we will use the **systemctl** command: 
 
-sudo systemctl restart isc-dhcp-relay ![](Aspose.Words.6fed6b4e-3816-4f11-8a37-9e4bb83ecdae.019.png)sudo systemctl status isc-dhcp-relay 
+sudo systemctl restart isc-dhcp-relay 
+
+sudo systemctl status isc-dhcp-relay 
 
 The result shows that there is no problem with this configuration: 
 
